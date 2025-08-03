@@ -266,10 +266,6 @@ const ShowDetailsPage: React.FC = () => {
                     <div className="episode-number">
                       S{episode.season}E{episode.number}
                     </div>
-                    
-                    <div className="episode-watch-status unwatched">
-                      👁️
-                    </div>
                   </div>
                   
                   <div className="episode-content">
@@ -301,12 +297,6 @@ const ShowDetailsPage: React.FC = () => {
                       </p>
                     )}
                     
-                    <div className="episode-actions">
-                      <button className="episode-watch-btn unwatched">
-                        <span>👁️</span>
-                        Marcar como visto
-                      </button>
-                    </div>
                   </div>
                 </div>
               ))}
