@@ -19,4 +19,3 @@ TV Tracker helps you keep track of the TV shows you're watching, want to watch, 
 - Personal viewing statistics
 - Responsive design for mobile and desktop
 - Local storage for offline access to your data
-
