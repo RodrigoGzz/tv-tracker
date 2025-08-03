@@ -1,0 +1,211 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: #2a2a4a;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  border: 1px solid #3a3a6b;
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  border-bottom: 1px solid #3a3a6b;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.2rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  color: #a0a0c4;
+}
+
+.modal-body p {
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.skipped-episodes-list {
+  background: #1e1e3a;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.skipped-episode-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #3a3a6b;
+}
+
+.skipped-episode-item:last-child {
+  border-bottom: none;
+}
+
+.skipped-episode-item .episode-number {
+  color: #00d4ff;
+  font-weight: bold;
+  font-size: 0.9rem;
+  min-width: 60px;
+}
+
+.skipped-episode-item .episode-name {
+  color: #ffffff;
+  flex: 1;
+}
+
+.modal-actions {
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
+  display: flex;
+  gap: 1rem;
+  border-top: 1px solid #3a3a6b;
+}
+
+.modal-button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.modal-button.primary {
+  background: #00d4ff;
+  color: #1e1e3a;
+}
+
+.modal-button.primary:hover {
+  background: #00bce6;
+  transform: translateY(-1px);
+}
+
+.modal-button.secondary {
+  background: #3a3a6b;
+  color: #ffffff;
+}
+
+.modal-button.secondary:hover {
+  background: #4a4a7b;
+  transform: translateY(-1px);
+}
+
+.modal-button.track-button.tracked {
+  background: #00d4ff;
+  color: #1e1e3a;
+  border: 2px solid #00d4ff;
+}
+
+.modal-button.track-button.tracked:hover {
+  background: #00bce6;
+  border-color: #00bce6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+}
+
+.modal-button.track-button.untracked {
+  background: transparent;
+  color: #a0a0c4;
+  border: 2px solid #3a3a6b;
+}
+
+.modal-button.track-button.untracked:hover {
+  background: #3a3a6b;
+  border-color: #4a4a7b;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(58, 58, 107, 0.3);
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .modal-button {
+    padding: 1rem;
+  }
+}
+
+
+.modal-button.secondary:hover {
+  background: #4a4a7b;
+  transform: translateY(-1px);
+}
+
+.modal-button.track-button.tracked {
+  background: #00d4ff;
+  color: #1e1e3a;
+  border: 2px solid #00d4ff;
+}
+
+.modal-button.track-button.tracked:hover {
+  background: #00bce6;
+  border-color: #00bce6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+}
+
+.modal-button.track-button.untracked {
+  background: transparent;
+  color: #a0a0c4;
+  border: 2px solid #3a3a6b;
+}
+
+.modal-button.track-button.untracked:hover {
+  background: #3a3a6b;
+  border-color: #4a4a7b;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(58, 58, 107, 0.3);
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .modal-button {
+    padding: 1rem;
+  }
+}

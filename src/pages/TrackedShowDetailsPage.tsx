@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { TrackedShow, Episode } from '../types';
 import { useApp } from '../context/AppContext';
 import { getShowEpisodes } from '../services/tvmaze';
-import { markEpisodeWatched, markEpisodeUnwatched, isEpisodeWatched } from '../services/localStorage';
+import { markEpisodeWatched, markEpisodeUnwatched, markMultipleEpisodesWatched, isEpisodeWatched } from '../services/localStorage';
+import { getPreviousUnwatchedEpisodes, canWatchEpisodeNext } from '../utils/episodeUtils';
 import LoadingSpinner from '../components/LoadingSpinner';
+import SkipEpisodesModal from '../components/SkipEpisodesModal';
 
 const TrackedShowDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +17,9 @@ const TrackedShowDetailsPage: React.FC = () => {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSeason, setSelectedSeason] = useState(1);
+  const [showSkipModal, setShowSkipModal] = useState(false);
+  const [pendingEpisode, setPendingEpisode] = useState<Episode | null>(null);
+  const [skippedEpisodes, setSkippedEpisodes] = useState<Episode[]>([]);
 
   const showId = parseInt(id || '0');
   const trackedShow = trackedShows.find(ts => ts.id === showId);
@@ -50,20 +55,76 @@ const TrackedShowDetailsPage: React.FC = () => {
     const isWatched = isEpisodeWatched(trackedShow.show.id, episode.id);
     
     if (isWatched) {
+      // Si está marcado como visto, simplemente desmarcarlo
       markEpisodeUnwatched(trackedShow.show.id, episode.id);
+      const updatedShow: TrackedShow = {
+        ...trackedShow,
+        watchedEpisodes: trackedShow.watchedEpisodes.filter(id => id !== episode.id)
+      };
+      updateShow(updatedShow);
     } else {
-      markEpisodeWatched(trackedShow.show.id, episode.id);
+      // Si no está marcado como visto, verificar si se puede marcar sin saltarse episodios
+      const canWatch = canWatchEpisodeNext(episodes, episode, trackedShow.watchedEpisodes);
+      
+      if (canWatch) {
+        // Se puede marcar directamente
+        markEpisodeWatched(trackedShow.show.id, episode.id);
+        const updatedShow: TrackedShow = {
+          ...trackedShow,
+          watchedEpisodes: [...trackedShow.watchedEpisodes, episode.id],
+          lastWatched: new Date().toISOString()
+        };
+        updateShow(updatedShow);
+      } else {
+        // Hay episodios anteriores sin ver, mostrar modal
+        const previousUnwatched = getPreviousUnwatchedEpisodes(episodes, episode, trackedShow.watchedEpisodes);
+        setSkippedEpisodes(previousUnwatched);
+        setPendingEpisode(episode);
+        setShowSkipModal(true);
+      }
     }
+  };
 
+  const handleSkipModalConfirm = () => {
+    if (!trackedShow || !pendingEpisode) return;
+    
+    // Marcar todos los episodios anteriores y el actual como vistos
+    const episodeIdsToMark = [...skippedEpisodes.map(ep => ep.id), pendingEpisode.id];
+    markMultipleEpisodesWatched(trackedShow.show.id, episodeIdsToMark);
+    
     const updatedShow: TrackedShow = {
       ...trackedShow,
-      watchedEpisodes: isWatched 
-        ? trackedShow.watchedEpisodes.filter(id => id !== episode.id)
-        : [...trackedShow.watchedEpisodes, episode.id],
-      lastWatched: isWatched ? trackedShow.lastWatched : new Date().toISOString()
+      watchedEpisodes: Array.from(new Set([...trackedShow.watchedEpisodes, ...episodeIdsToMark])),
+      lastWatched: new Date().toISOString()
     };
-    
     updateShow(updatedShow);
+    
+    setShowSkipModal(false);
+    setPendingEpisode(null);
+    setSkippedEpisodes([]);
+  };
+
+  const handleSkipModalCancel = () => {
+    if (!trackedShow || !pendingEpisode) return;
+    
+    // Marcar solo el episodio seleccionado como visto
+    markEpisodeWatched(trackedShow.show.id, pendingEpisode.id);
+    const updatedShow: TrackedShow = {
+      ...trackedShow,
+      watchedEpisodes: [...trackedShow.watchedEpisodes, pendingEpisode.id],
+      lastWatched: new Date().toISOString()
+    };
+    updateShow(updatedShow);
+    
+    setShowSkipModal(false);
+    setPendingEpisode(null);
+    setSkippedEpisodes([]);
+  };
+
+  const handleSkipModalClose = () => {
+    setShowSkipModal(false);
+    setPendingEpisode(null);
+    setSkippedEpisodes([]);
   };
 
   const handleRemoveShow = () => {
@@ -338,6 +399,15 @@ const TrackedShowDetailsPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      <SkipEpisodesModal
+        isOpen={showSkipModal}
+        onClose={handleSkipModalClose}
+        onConfirm={handleSkipModalConfirm}
+        onCancel={handleSkipModalCancel}
+        skippedEpisodes={skippedEpisodes}
+        targetEpisode={pendingEpisode!}
+      />
     </div>
   );
 };

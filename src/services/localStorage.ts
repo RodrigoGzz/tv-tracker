@@ -77,6 +77,23 @@ export const markEpisodeWatched = (showId: number, episodeId: number): void => {
   }
 };
 
+// Marcar múltiples episodios como vistos
+export const markMultipleEpisodesWatched = (showId: number, episodeIds: number[]): void => {
+  const data = getStorageData();
+  const showIndex = data.trackedShows.findIndex(show => show.id === showId);
+  
+  if (showIndex !== -1) {
+    const show = data.trackedShows[showIndex];
+    episodeIds.forEach(episodeId => {
+      if (!show.watchedEpisodes.includes(episodeId)) {
+        show.watchedEpisodes.push(episodeId);
+      }
+    });
+    show.lastWatched = new Date().toISOString();
+    saveStorageData(data);
+  }
+};
+
 // Desmarcar episodio como visto
 export const markEpisodeUnwatched = (showId: number, episodeId: number): void => {
   const data = getStorageData();
