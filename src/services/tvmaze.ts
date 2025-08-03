@@ -44,30 +44,55 @@ export const getShowEpisodes = async (showId: number): Promise<Episode[]> => {
   }
 };
 
-// Obtener series populares con paginación
-export const getPopularShows = async (page: number = 0): Promise<{ shows: Show[], hasMore: boolean }> => {
+// Obtener series populares con paginación y exclusiones
+export const getPopularShows = async (
+  page: number = 0, 
+  excludeIds: number[] = [],
+  minShows: number = 9
+): Promise<{ shows: Show[], hasMore: boolean }> => {
   try {
-    // TVMaze API permite obtener shows con paginación
-    const response = await fetch(`${BASE_URL}/shows?page=${page}`);
-    if (!response.ok) {
-      throw new Error('Error al obtener series populares');
+    let allShows: Show[] = [];
+    let currentApiPage = 0;
+    const maxApiPagesToLoad = 20; // Cargar más páginas para tener mejor selección
+    
+    // Cargar múltiples páginas de la API para tener un pool más grande
+    while (currentApiPage < maxApiPagesToLoad) {
+      const response = await fetch(`${BASE_URL}/shows?page=${currentApiPage}`);
+      if (!response.ok) {
+        break;
+      }
+      
+      const shows: Show[] = await response.json();
+      
+      if (shows.length === 0) {
+        break;
+      }
+      
+      // Filtrar shows que tengan rating y no estén excluidos
+      const validShows = shows.filter(show => 
+        show.rating.average !== null && 
+        !excludeIds.includes(show.id)
+      );
+      
+      allShows = [...allShows, ...validShows];
+      currentApiPage++;
     }
     
-    const shows: Show[] = await response.json();
+    // Ordenar TODOS los shows por rating descendente
+    allShows.sort((a, b) => (b.rating.average || 0) - (a.rating.average || 0));
     
-    // Filtrar shows que tengan rating y ordenar por rating descendente
-    const showsWithRating = shows
-      .filter(show => show.rating.average !== null)
-      .sort((a, b) => (b.rating.average || 0) - (a.rating.average || 0));
+    // Calcular el índice de inicio para esta página
+    const startIndex = page * minShows;
+    const endIndex = startIndex + minShows;
     
-    // Tomar las primeras 10 series más populares de esta página
-    const popularShows = showsWithRating.slice(0, 9);
+    // Obtener los shows para esta página específica
+    const pageShows = allShows.slice(startIndex, endIndex);
     
     // Verificar si hay más páginas disponibles
-    const hasMore = shows.length > 0;
+    const hasMore = endIndex < allShows.length;
     
     return {
-      shows: popularShows,
+      shows: pageShows,
       hasMore
     };
   } catch (error) {

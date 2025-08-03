@@ -3,26 +3,155 @@ import { Show } from '../types';
 import { getPopularShows } from '../services/tvmaze';
 import ShowCard from './ShowCard';
 import LoadingSpinner from './LoadingSpinner';
+import { useApp } from '../context/AppContext';
 
 const PopularShows: React.FC = () => {
+  const { isShowTracked, trackedShows, loading: contextLoading } = useApp();
   const [popularShows, setPopularShows] = useState<Show[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [explodingShows, setExplodingShows] = useState<Set<number>>(new Set());
+  const [allShowsCache, setAllShowsCache] = useState<Show[]>([]);
 
+  const SHOWS_PER_PAGE = 9;
+
+  // Solo cargar cuando el contexto haya terminado de cargar
   useEffect(() => {
-    loadInitialShows();
-  }, []);
+    if (!contextLoading) {
+      loadInitialShows();
+    }
+  }, [contextLoading]);
+
+  // Recargar cuando cambien las series seguidas - pero no durante la animación
+  useEffect(() => {
+    if (allShowsCache.length > 0 && explodingShows.size === 0 && !contextLoading) {
+      updateDisplayedShows();
+    }
+  }, [trackedShows.length, currentPage, contextLoading]);
+
+  const getExcludedIds = () => {
+    return trackedShows.map(tracked => tracked.show.id);
+  };
+
+  const updateDisplayedShows = () => {
+    const excludedIds = getExcludedIds();
+    const filteredShows = allShowsCache.filter(show => !excludedIds.includes(show.id));
+    
+    const startIndex = currentPage * SHOWS_PER_PAGE;
+    const endIndex = startIndex + SHOWS_PER_PAGE;
+    const pageShows = filteredShows.slice(startIndex, endIndex);
+    
+    setPopularShows(pageShows);
+    setHasMore(endIndex < filteredShows.length);
+  };
+
+  const handleShowTracked = async (showId: number) => {
+    // Agregar a la lista de shows que van a explotar
+    setExplodingShows(prev => new Set(prev).add(showId));
+    
+    // Después de la animación, actualizar la vista
+    setTimeout(async () => {
+      try {
+        // Remover el show de la lista actual inmediatamente
+        setPopularShows(prev => prev.filter(show => show.id !== showId));
+        
+        // Actualizar el cache para excluir el show recién agregado
+        const excludedIds = [...getExcludedIds(), showId];
+        const filteredCache = allShowsCache.filter(show => !excludedIds.includes(show.id));
+        
+        // Calcular cuántos shows necesitamos para llenar la página actual
+        const startIndex = currentPage * SHOWS_PER_PAGE;
+        const endIndex = startIndex + SHOWS_PER_PAGE;
+        const availableShows = filteredCache.slice(startIndex, endIndex);
+        
+        // Si no tenemos suficientes shows en cache, cargar más
+        if (availableShows.length < SHOWS_PER_PAGE && hasMore) {
+          const additionalResult = await getPopularShows(0, excludedIds, SHOWS_PER_PAGE * 20);
+          setAllShowsCache(additionalResult.shows);
+          
+          // Usar el nuevo cache para obtener los shows de la página actual
+          const newFilteredShows = additionalResult.shows.filter(show => !excludedIds.includes(show.id));
+          const newPageShows = newFilteredShows.slice(startIndex, endIndex);
+          
+          setPopularShows(newPageShows);
+          setHasMore(endIndex < newFilteredShows.length);
+        } else {
+          // Usar el cache existente
+          setPopularShows(availableShows);
+          setHasMore(endIndex < filteredCache.length);
+        }
+        
+      } catch (error) {
+        console.error('Error loading replacement show:', error);
+        // En caso de error, al menos actualizar con el cache actual
+        updateDisplayedShows();
+      } finally {
+        setExplodingShows(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(showId);
+          return newSet;
+        });
+      }
+    }, 600);
+  };
+
+  const ExplodingShowCard: React.FC<{ show: Show }> = ({ show }) => {
+    const isExploding = explodingShows.has(show.id);
+    
+    const createParticles = () => {
+      const particles = [];
+      for (let i = 0; i < 12; i++) {
+        const angle = (i * 30) * Math.PI / 180;
+        const distance = 100 + Math.random() * 50;
+        const x = Math.cos(angle) * distance;
+        const y = Math.sin(angle) * distance;
+        
+        particles.push(
+          <div
+            key={i}
+            className="particle"
+            style={{
+              '--particle-direction': `translate(${x}px, ${y}px)`,
+              animationDelay: `${Math.random() * 0.1}s`
+            } as React.CSSProperties}
+          />
+        );
+      }
+      return particles;
+    };
+
+    return (
+      <div style={{ position: 'relative' }}>
+        <div className={isExploding ? 'show-card-exploding' : ''}>
+          <ShowCard show={show} onTrack={() => handleShowTracked(show.id)} />
+        </div>
+        {isExploding && (
+          <div className="explosion-particles">
+            {createParticles()}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const loadInitialShows = async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await getPopularShows(0);
-      setPopularShows(result.shows);
-      setHasMore(result.hasMore);
+      const excludedIds = getExcludedIds();
+      console.log('Loading initial shows with excluded IDs:', excludedIds); // Debug log
+      const result = await getPopularShows(0, excludedIds, SHOWS_PER_PAGE * 15);
+      
+      setAllShowsCache(result.shows);
+      
+      // Mostrar la primera página
+      const filteredShows = result.shows.filter(show => !excludedIds.includes(show.id));
+      const pageShows = filteredShows.slice(0, SHOWS_PER_PAGE);
+      setPopularShows(pageShows);
+      setHasMore(SHOWS_PER_PAGE < filteredShows.length);
       setCurrentPage(0);
     } catch (error) {
       console.error('Error loading initial shows:', error);
@@ -39,18 +168,31 @@ const PopularShows: React.FC = () => {
     setError(null);
     try {
       const nextPage = currentPage + 1;
-      const result = await getPopularShows(nextPage);
+      setCurrentPage(nextPage);
       
-      if (result.shows.length > 0) {
-        setPopularShows(result.shows);
-        setCurrentPage(nextPage);
-        setHasMore(result.hasMore);
+      const excludedIds = getExcludedIds();
+      const filteredShows = allShowsCache.filter(show => !excludedIds.includes(show.id));
+      
+      const startIndex = nextPage * SHOWS_PER_PAGE;
+      const endIndex = startIndex + SHOWS_PER_PAGE;
+      
+      // Si necesitamos más shows, cargar más del API
+      if (endIndex > filteredShows.length) {
+        const additionalResult = await getPopularShows(0, excludedIds, SHOWS_PER_PAGE * 20);
+        setAllShowsCache(additionalResult.shows);
         
-        // Scroll to top when page changes
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const newFilteredShows = additionalResult.shows.filter(show => !excludedIds.includes(show.id));
+        const pageShows = newFilteredShows.slice(startIndex, endIndex);
+        
+        setPopularShows(pageShows);
+        setHasMore(endIndex < newFilteredShows.length);
       } else {
-        setHasMore(false);
+        const pageShows = filteredShows.slice(startIndex, endIndex);
+        setPopularShows(pageShows);
+        setHasMore(endIndex < filteredShows.length);
       }
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Error loading next page:', error);
       setError('Error al cargar más series');
@@ -66,13 +208,18 @@ const PopularShows: React.FC = () => {
     setError(null);
     try {
       const prevPage = currentPage - 1;
-      const result = await getPopularShows(prevPage);
-      
-      setPopularShows(result.shows);
       setCurrentPage(prevPage);
-      setHasMore(true);
       
-      // Scroll to top when page changes
+      const excludedIds = getExcludedIds();
+      const filteredShows = allShowsCache.filter(show => !excludedIds.includes(show.id));
+      
+      const startIndex = prevPage * SHOWS_PER_PAGE;
+      const endIndex = startIndex + SHOWS_PER_PAGE;
+      const pageShows = filteredShows.slice(startIndex, endIndex);
+      
+      setPopularShows(pageShows);
+      setHasMore(endIndex < filteredShows.length);
+      
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Error loading previous page:', error);
@@ -82,7 +229,8 @@ const PopularShows: React.FC = () => {
     }
   };
 
-  if (loading) {
+  // Mostrar loading mientras el contexto está cargando O mientras estamos cargando shows
+  if (contextLoading || loading) {
     return (
       <div className="popular-shows-loading">
         <LoadingSpinner />
@@ -97,6 +245,10 @@ const PopularShows: React.FC = () => {
         <h2>Series Populares</h2>
         <div className="page-info">
           <span>Página {currentPage + 1}</span>
+          {trackedShows.length > 0 && (
+            <span className="excluded-info">
+            </span>
+          )}
         </div>
       </div>
 
@@ -113,7 +265,7 @@ const PopularShows: React.FC = () => {
         <>
           <div className="shows-grid">
             {popularShows.map(show => (
-              <ShowCard key={show.id} show={show} />
+              <ExplodingShowCard key={show.id} show={show} />
             ))}
           </div>
 

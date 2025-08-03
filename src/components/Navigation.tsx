@@ -16,10 +16,10 @@ const Navigation: React.FC = () => {
   return (
     <nav className="navigation">
       <div className="nav-container">
-        <div className="nav-brand">
+        <Link to="/" className="nav-brand">
           <h1>📺 TV Tracker</h1>
           <p>Tu seguimiento de series personal</p>
-        </div>
+        </Link>
 
         {/* Mobile menu button */}
         <button 
