@@ -61,18 +61,3 @@ export const getPopularShows = async (): Promise<Show[]> => {
     return [];
   }
 };
-
-// Obtener programación de hoy
-export const getTodaySchedule = async (): Promise<ScheduleItem[]> => {
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const response = await fetch(`${BASE_URL}/schedule?date=${today}`);
-    if (!response.ok) {
-      throw new Error('Error al obtener la programación');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error getting today schedule:', error);
-    return [];
-  }
-};

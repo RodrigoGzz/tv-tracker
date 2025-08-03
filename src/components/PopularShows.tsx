@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Show, ScheduleItem } from '../types';
-import { getPopularShows, getTodaySchedule } from '../services/tvmaze';
+import { getPopularShows } from '../services/tvmaze';
 import ShowCard from './ShowCard';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -17,13 +17,11 @@ const PopularShows: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [popular, today] = await Promise.all([
-        getPopularShows(),
-        getTodaySchedule()
+      const [popular] = await Promise.all([
+        getPopularShows()
       ]);
       
       setPopularShows(popular);
-      setTodayShows(today);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -48,12 +46,6 @@ const PopularShows: React.FC = () => {
           onClick={() => setActiveTab('popular')}
         >
           Series Populares
-        </button>
-        <button 
-          className={`tab ${activeTab === 'today' ? 'active' : ''}`}
-          onClick={() => setActiveTab('today')}
-        >
-          Programación de Hoy
         </button>
       </div>
 
