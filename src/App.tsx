@@ -1,26 +1,40 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useState } from 'react';
+import { AppProvider } from './context/AppContext';
+import Navigation from './components/Navigation';
+import PopularShows from './components/PopularShows';
+import MyShows from './components/MyShows';
+import SearchBox from './components/SearchBox';
 import './App.css';
 
-function App() {
+const App: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('discover');
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'discover':
+        return <PopularShows />;
+      case 'my-shows':
+        return <MyShows />;
+      case 'search':
+        return <SearchBox />;
+      default:
+        return <PopularShows />;
+    }
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AppProvider>
+      <div className="App">
+        <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+        <main className="main-content">
+          {renderContent()}
+        </main>
+        <footer className="app-footer">
+          <p>TV Tracker - Datos proporcionados por <a href="https://www.tvmaze.com/api" target="_blank" rel="noopener noreferrer">TVMaze API</a></p>
+        </footer>
+      </div>
+    </AppProvider>
   );
-}
+};
 
 export default App;
