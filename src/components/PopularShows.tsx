@@ -1,31 +1,78 @@
 import React, { useState, useEffect } from 'react';
-import { Show, ScheduleItem } from '../types';
+import { Show } from '../types';
 import { getPopularShows } from '../services/tvmaze';
 import ShowCard from './ShowCard';
 import LoadingSpinner from './LoadingSpinner';
 
 const PopularShows: React.FC = () => {
   const [popularShows, setPopularShows] = useState<Show[]>([]);
-  const [todayShows, setTodayShows] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'popular' | 'today'>('popular');
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadData();
+    loadInitialShows();
   }, []);
 
-  const loadData = async () => {
+  const loadInitialShows = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const [popular] = await Promise.all([
-        getPopularShows()
-      ]);
-      
-      setPopularShows(popular);
+      const result = await getPopularShows(0);
+      setPopularShows(result.shows);
+      setHasMore(result.hasMore);
+      setCurrentPage(0);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading initial shows:', error);
+      setError('Error al cargar las series populares');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadNextPage = async () => {
+    if (loadingMore || !hasMore) return;
+    
+    setLoadingMore(true);
+    setError(null);
+    try {
+      const nextPage = currentPage + 1;
+      const result = await getPopularShows(nextPage);
+      
+      if (result.shows.length > 0) {
+        setPopularShows(result.shows);
+        setCurrentPage(nextPage);
+        setHasMore(result.hasMore);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error loading next page:', error);
+      setError('Error al cargar más series');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const loadPreviousPage = async () => {
+    if (loadingMore || currentPage === 0) return;
+    
+    setLoadingMore(true);
+    setError(null);
+    try {
+      const prevPage = currentPage - 1;
+      const result = await getPopularShows(prevPage);
+      
+      setPopularShows(result.shows);
+      setCurrentPage(prevPage);
+      setHasMore(true);
+    } catch (error) {
+      console.error('Error loading previous page:', error);
+      setError('Error al cargar la página anterior');
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -33,58 +80,66 @@ const PopularShows: React.FC = () => {
     return (
       <div className="popular-shows-loading">
         <LoadingSpinner />
-        <p>Cargando contenido...</p>
+        <p>Cargando series populares...</p>
       </div>
     );
   }
 
   return (
     <div className="popular-shows">
-      <div className="tabs">
-        <button 
-          className={`tab ${activeTab === 'popular' ? 'active' : ''}`}
-          onClick={() => setActiveTab('popular')}
-        >
-          Series Populares
-        </button>
+      <div className="popular-header">
+        <h2>Series Populares</h2>
+        <div className="page-info">
+          <span>Página {currentPage + 1}</span>
+        </div>
       </div>
 
-      {activeTab === 'popular' && (
-        <div className="popular-content">
-          <h2>Series Populares</h2>
-          {popularShows.length > 0 ? (
-            <div className="shows-grid">
-              {popularShows.map(show => (
-                <ShowCard key={show.id} show={show} />
-              ))}
-            </div>
-          ) : (
-            <p>No se pudieron cargar las series populares.</p>
-          )}
+      {error && (
+        <div className="error-message">
+          <p>{error}</p>
+          <button onClick={loadInitialShows} className="retry-button">
+            Reintentar
+          </button>
         </div>
       )}
 
-      {activeTab === 'today' && (
-        <div className="today-content">
-          <h2>Programación de Hoy</h2>
-          {todayShows.length > 0 ? (
-            <div className="today-shows">
-              {todayShows.slice(0, 20).map((item, index) => (
-                <div key={index} className="today-show-item">
-                  <ShowCard show={item.show} />
-                  <div className="episode-info">
-                    <p><strong>Episodio de hoy:</strong></p>
-                    <p>S{item.season || '?'}E{item.number || '?'} - {item.name || 'Sin título'}</p>
-                    {item.airtime && (
-                      <p>Hora: {item.airtime}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
+      {popularShows.length > 0 ? (
+        <>
+          <div className="shows-grid">
+            {popularShows.map(show => (
+              <ShowCard key={show.id} show={show} />
+            ))}
+          </div>
+
+          <div className="pagination-controls">
+            <button
+              onClick={loadPreviousPage}
+              disabled={currentPage === 0 || loadingMore}
+              className="pagination-button prev"
+            >
+              ← Página Anterior
+            </button>
+
+            <div className="pagination-info">
+              <span>Página {currentPage + 1}</span>
+              {loadingMore && <LoadingSpinner />}
             </div>
-          ) : (
-            <p>No hay programación disponible para hoy.</p>
-          )}
+
+            <button
+              onClick={loadNextPage}
+              disabled={!hasMore || loadingMore}
+              className="pagination-button next"
+            >
+              Página Siguiente →
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="no-shows">
+          <p>No se pudieron cargar las series populares.</p>
+          <button onClick={loadInitialShows} className="retry-button">
+            Reintentar
+          </button>
         </div>
       )}
     </div>
