@@ -1,32 +1,32 @@
-# Getting Started with Create React App
+# TV Tracker
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React-based web application for tracking your favorite TV shows and managing your watchlist.
 
-## Available Scripts
+## What is TV Tracker?
 
-In the project directory, you can run:
+TV Tracker helps you keep track of the TV shows you're watching, want to watch, or have completed. With this application, you can:
 
-### `npm start`
+- **Discover Shows**: Browse and search for TV shows
+- **Track Progress**: Mark episodes as watched and keep track of your viewing progress
+- **Manage Watchlists**: Create lists of shows you want to watch later
+- **Rate & Review**: Rate shows and write personal reviews
+- **Get Recommendations**: Discover new shows based on your viewing history
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Features
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- Clean and intuitive user interface
+- Real-time show information and ratings
+- Personal viewing statistics
+- Responsive design for mobile and desktop
+- Local storage for offline access to your data
 
-### `npm test`
+## Technology Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Built with React and modern web technologies for a smooth and responsive user experience.
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
+*Start tracking your TV shows today and never lose track of what to watch next!*
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
 ### `npm run eject`
