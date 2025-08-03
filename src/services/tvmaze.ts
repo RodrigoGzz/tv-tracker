@@ -44,35 +44,37 @@ export const getShowEpisodes = async (showId: number): Promise<Episode[]> => {
   }
 };
 
-// Obtener series populares (usando una búsqueda genérica como alternativa)
-export const getPopularShows = async (): Promise<Show[]> => {
+// Obtener series populares con paginación
+export const getPopularShows = async (page: number = 0): Promise<{ shows: Show[], hasMore: boolean }> => {
   try {
-    // TVMaze no tiene endpoint de series populares, así que usaremos algunas búsquedas predefinidas
-    const popularQueries = ['Game of Thrones', 'Breaking Bad', 'The Office', 'Friends', 'Stranger Things'];
-    const promises = popularQueries.map(query => searchShows(query));
-    const results = await Promise.all(promises);
+    // TVMaze API permite obtener shows con paginación
+    const response = await fetch(`${BASE_URL}/shows?page=${page}`);
+    if (!response.ok) {
+      throw new Error('Error al obtener series populares');
+    }
     
-    return results
-      .filter(result => result.length > 0)
-      .map(result => result[0].show)
-      .slice(0, 10);
+    const shows: Show[] = await response.json();
+    
+    // Filtrar shows que tengan rating y ordenar por rating descendente
+    const showsWithRating = shows
+      .filter(show => show.rating.average !== null)
+      .sort((a, b) => (b.rating.average || 0) - (a.rating.average || 0));
+    
+    // Tomar las primeras 10 series más populares de esta página
+    const popularShows = showsWithRating.slice(0, 9);
+    
+    // Verificar si hay más páginas disponibles
+    const hasMore = shows.length > 0;
+    
+    return {
+      shows: popularShows,
+      hasMore
+    };
   } catch (error) {
     console.error('Error getting popular shows:', error);
-    return [];
-  }
-};
-
-// Obtener programación de hoy
-export const getTodaySchedule = async (): Promise<ScheduleItem[]> => {
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    const response = await fetch(`${BASE_URL}/schedule?date=${today}`);
-    if (!response.ok) {
-      throw new Error('Error al obtener la programación');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error getting today schedule:', error);
-    return [];
+    return {
+      shows: [],
+      hasMore: false
+    };
   }
 };

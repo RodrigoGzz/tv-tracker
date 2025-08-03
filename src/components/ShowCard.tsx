@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Show, TrackedShow } from '../types';
 import { useApp } from '../context/AppContext';
 
@@ -84,6 +85,12 @@ const ShowCard: React.FC<ShowCardProps> = ({ show, isDetailed = false }) => {
           >
             {isTracked ? '✓ Siguiendo' : '+ Seguir'}
           </button>
+          <Link
+            to={`/show/${show.id}`}
+            className="details-button"
+          >
+            📖 Ver detalles
+          </Link>
         </div>
       </div>
     </div>

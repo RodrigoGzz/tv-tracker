@@ -1,38 +1,38 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import Navigation from './components/Navigation';
-import PopularShows from './components/PopularShows';
-import MyShows from './components/MyShows';
-import SearchBox from './components/SearchBox';
+import DiscoverPage from './pages/DiscoverPage';
+import MyShowsPage from './pages/MyShowsPage';
+import SearchPage from './pages/SearchPage';
+import StatsPage from './pages/StatsPage';
+import SettingsPage from './pages/SettingsPage';
+import ShowDetailsPage from './pages/ShowDetailsPage';
+import NotFoundPage from './pages/NotFoundPage';
 import './App.css';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('discover');
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'discover':
-        return <PopularShows />;
-      case 'my-shows':
-        return <MyShows />;
-      case 'search':
-        return <SearchBox />;
-      default:
-        return <PopularShows />;
-    }
-  };
-
   return (
     <AppProvider>
-      <div className="App">
-        <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
-        <main className="main-content">
-          {renderContent()}
-        </main>
-        <footer className="app-footer">
-          <p>TV Tracker - Datos proporcionados por <a href="https://www.tvmaze.com/api" target="_blank" rel="noopener noreferrer">TVMaze API</a></p>
-        </footer>
-      </div>
+      <Router>
+        <div className="App">
+          <Navigation />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<DiscoverPage />} />
+              <Route path="/my-shows" element={<MyShowsPage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/stats" element={<StatsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/show/:id" element={<ShowDetailsPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </main>
+          <footer className="app-footer">
+            <p>TV Tracker - Datos proporcionados por <a href="https://www.tvmaze.com/api" target="_blank" rel="noopener noreferrer">TVMaze API</a></p>
+          </footer>
+        </div>
+      </Router>
     </AppProvider>
   );
 };
