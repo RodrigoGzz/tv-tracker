@@ -8,6 +8,7 @@ import SearchPage from './pages/SearchPage';
 import StatsPage from './pages/StatsPage';
 import SettingsPage from './pages/SettingsPage';
 import ShowDetailsPage from './pages/ShowDetailsPage';
+import TrackedShowDetailsPage from './pages/TrackedShowDetailsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import './App.css';
 
@@ -21,6 +22,7 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<DiscoverPage />} />
               <Route path="/my-shows" element={<MyShowsPage />} />
+              <Route path="/my-shows/:id" element={<TrackedShowDetailsPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/stats" element={<StatsPage />} />
               <Route path="/settings" element={<SettingsPage />} />

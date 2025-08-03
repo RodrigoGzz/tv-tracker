@@ -6,9 +6,10 @@ import { useApp } from '../context/AppContext';
 interface ShowCardProps {
   show: Show;
   isDetailed?: boolean;
+  onTrack?: () => void; // Callback opcional cuando se sigue una serie
 }
 
-const ShowCard: React.FC<ShowCardProps> = ({ show, isDetailed = false }) => {
+const ShowCard: React.FC<ShowCardProps> = ({ show, isDetailed = false, onTrack }) => {
   const { addShow, removeShow, isShowTracked } = useApp();
   const isTracked = isShowTracked(show.id);
 
@@ -27,6 +28,11 @@ const ShowCard: React.FC<ShowCardProps> = ({ show, isDetailed = false }) => {
         isCompleted: false
       };
       addShow(newTrackedShow);
+      
+      // Llamar al callback si existe (para la animación de explosión)
+      if (onTrack) {
+        onTrack();
+      }
     }
   };
 

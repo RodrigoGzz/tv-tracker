@@ -242,26 +242,71 @@ const ShowDetailsPage: React.FC = () => {
             <div className="episodes-grid">
               {getSeasonEpisodes(selectedSeason).map(episode => (
                 <div key={episode.id} className="episode-card">
-                  <div className="episode-number">
-                    S{episode.season}E{episode.number}
-                  </div>
-                  <div className="episode-info">
-                    <h4>{episode.name}</h4>
-                    {episode.airdate && (
-                      <p className="episode-airdate">
-                        {new Date(episode.airdate).toLocaleDateString()}
-                      </p>
+                  <div className="episode-thumbnail">
+                    {episode.image ? (
+                      <img 
+                        src={episode.image.medium || episode.image.original} 
+                        alt={episode.name}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.parentElement!.innerHTML = `
+                            <div class="episode-placeholder">
+                              <div class="play-icon">▶️</div>
+                            </div>
+                          `;
+                        }}
+                      />
+                    ) : (
+                      <div className="episode-placeholder">
+                        <div className="play-icon">▶️</div>
+                      </div>
                     )}
+                    
+                    <div className="episode-number">
+                      S{episode.season}E{episode.number}
+                    </div>
+                    
+                    <div className="episode-watch-status unwatched">
+                      👁️
+                    </div>
+                  </div>
+                  
+                  <div className="episode-content">
+                    <div className="episode-header">
+                      <h4 className="episode-title">{episode.name}</h4>
+                      
+                      <div className="episode-meta">
+                        {episode.airdate && (
+                          <span className="episode-airdate">
+                            {new Date(episode.airdate).toLocaleDateString()}
+                          </span>
+                        )}
+                        {episode.rating.average && (
+                          <span className="episode-rating">
+                            ⭐ {episode.rating.average}
+                          </span>
+                        )}
+                        {episode.runtime && (
+                          <span className="episode-runtime">
+                            {episode.runtime}min
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
                     {episode.summary && (
                       <p className="episode-summary">
                         {stripHtml(episode.summary)}
                       </p>
                     )}
-                    {episode.rating.average && (
-                      <div className="episode-rating">
-                        ⭐ {episode.rating.average}
-                      </div>
-                    )}
+                    
+                    <div className="episode-actions">
+                      <button className="episode-watch-btn unwatched">
+                        <span>👁️</span>
+                        Marcar como visto
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
