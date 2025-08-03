@@ -1,6 +1,6 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import TrackedShowCard from './TrackedShowCard';
 import LoadingSpinner from './LoadingSpinner';
 
 const MyShows: React.FC = () => {
@@ -39,10 +39,17 @@ const MyShows: React.FC = () => {
   const totalShows = trackedShows.length;
   const totalWatchedEpisodes = trackedShows.reduce((sum, show) => sum + show.watchedEpisodes.length, 0);
   const completedShows = trackedShows.filter(show => show.isCompleted).length;
-  const recentlyWatched = trackedShows
-    .filter(show => show.lastWatched)
-    .sort((a, b) => new Date(b.lastWatched!).getTime() - new Date(a.lastWatched!).getTime())
-    .slice(0, 3);
+
+  const getImageUrl = (trackedShow: any) => {
+    return trackedShow.show.image?.medium || trackedShow.show.image?.original || '/placeholder-show.jpg';
+  };
+
+  const getProgress = (trackedShow: any) => {
+    // Esta función calculará el progreso cuando tengamos los episodios
+    // Por ahora retornamos un valor basado en episodios vistos
+    const watchedCount = trackedShow.watchedEpisodes.length;
+    return watchedCount > 0 ? Math.min(watchedCount * 5, 100) : 0; // Estimación temporal
+  };
 
   return (
     <div className="my-shows">
@@ -64,47 +71,57 @@ const MyShows: React.FC = () => {
         </div>
       </div>
 
-      {recentlyWatched.length > 0 && (
-        <div className="recently-watched-section">
-          <h2>Visto recientemente</h2>
-          <div className="recently-watched-list">
-            {recentlyWatched.map(show => (
-              <div key={show.id} className="recent-show-item">
-                <img 
-                  src={show.show.image?.medium || '/placeholder-show.jpg'} 
-                  alt={show.show.name}
-                  className="recent-show-image"
+      <div className="my-shows-grid">
+        {trackedShows
+          .sort((a, b) => {
+            // Ordenar por última vez visto (más reciente primero)
+            if (a.lastWatched && b.lastWatched) {
+              return new Date(b.lastWatched).getTime() - new Date(a.lastWatched).getTime();
+            }
+            if (a.lastWatched && !b.lastWatched) return -1;
+            if (!a.lastWatched && b.lastWatched) return 1;
+            return a.show.name.localeCompare(b.show.name);
+          })
+          .map(trackedShow => (
+            <Link
+              key={trackedShow.id}
+              to={`/my-shows/${trackedShow.id}`}
+              className="my-show-card"
+            >
+              <div className="my-show-image">
+                <img
+                  src={getImageUrl(trackedShow)}
+                  alt={trackedShow.show.name}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder-show.jpg';
+                  }}
                 />
-                <div className="recent-show-info">
-                  <h4>{show.show.name}</h4>
-                  <p>Último episodio: {new Date(show.lastWatched!).toLocaleDateString()}</p>
+                <div className="progress-overlay">
+                  <div 
+                    className="progress-circle" 
+                    style={{ 
+                      background: `conic-gradient(#00d4ff ${getProgress(trackedShow)}%, #3a3a6b ${getProgress(trackedShow)}%)` 
+                    }}
+                  >
+                    <div className="progress-text">
+                      {trackedShow.watchedEpisodes.length}
+                    </div>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="tracked-shows-list">
-        <h2>Todas las series ({totalShows})</h2>
-        <div className="shows-container">
-          {trackedShows
-            .sort((a, b) => {
-              // Ordenar por última vez visto (más reciente primero)
-              if (a.lastWatched && b.lastWatched) {
-                return new Date(b.lastWatched).getTime() - new Date(a.lastWatched).getTime();
-              }
-              if (a.lastWatched && !b.lastWatched) return -1;
-              if (!a.lastWatched && b.lastWatched) return 1;
-              return a.show.name.localeCompare(b.show.name);
-            })
-            .map(trackedShow => (
-              <TrackedShowCard 
-                key={trackedShow.id} 
-                trackedShow={trackedShow} 
-              />
-            ))}
-        </div>
+              
+              <div className="my-show-info">
+                <h3 className="my-show-title">{trackedShow.show.name}</h3>
+                <p className="my-show-status">{trackedShow.show.status}</p>
+                {trackedShow.lastWatched && (
+                  <p className="my-show-last-watched">
+                    Último visto: {new Date(trackedShow.lastWatched).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+            </Link>
+          ))}
       </div>
     </div>
   );
