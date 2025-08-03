@@ -45,6 +45,9 @@ const PopularShows: React.FC = () => {
         setPopularShows(result.shows);
         setCurrentPage(nextPage);
         setHasMore(result.hasMore);
+        
+        // Scroll to top when page changes
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         setHasMore(false);
       }
@@ -68,6 +71,9 @@ const PopularShows: React.FC = () => {
       setPopularShows(result.shows);
       setCurrentPage(prevPage);
       setHasMore(true);
+      
+      // Scroll to top when page changes
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Error loading previous page:', error);
       setError('Error al cargar la página anterior');

@@ -61,7 +61,7 @@ export const getPopularShows = async (page: number = 0): Promise<{ shows: Show[]
       .sort((a, b) => (b.rating.average || 0) - (a.rating.average || 0));
     
     // Tomar las primeras 10 series más populares de esta página
-    const popularShows = showsWithRating.slice(0, 10);
+    const popularShows = showsWithRating.slice(0, 9);
     
     // Verificar si hay más páginas disponibles
     const hasMore = shows.length > 0;
