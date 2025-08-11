@@ -1,5 +1,7 @@
 /* Page-specific styles */
-.discover-page, .my-shows-page, .search-page {
+.discover-page,
+.my-shows-page,
+.search-page {
   min-height: 50vh;
 }
 
@@ -79,7 +81,7 @@
 }
 
 .empty-tips li::before {
-  content: "•";
+  content: '•';
   color: #00d4ff;
   margin-right: 0.5rem;
 }
@@ -189,7 +191,8 @@
   margin-bottom: 2rem;
 }
 
-.episodes-tab, .info-tab {
+.episodes-tab,
+.info-tab {
   background: linear-gradient(145deg, #1e1e3f 0%, #2d2d57 100%);
   border-radius: 12px;
   border: 1px solid #3a3a6b;
@@ -313,13 +316,15 @@
   font-size: 0.9rem;
 }
 
-.top-shows-list, .recent-shows-list {
+.top-shows-list,
+.recent-shows-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.top-show-item, .recent-show-item {
+.top-show-item,
+.recent-show-item {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -330,20 +335,23 @@
   transition: all 0.3s ease;
 }
 
-.top-show-image, .recent-show-image {
+.top-show-image,
+.recent-show-image {
   width: 50px;
   height: 70px;
   object-fit: cover;
   border-radius: 4px;
 }
 
-.top-show-info h4, .recent-show-info h4 {
+.top-show-info h4,
+.recent-show-info h4 {
   margin: 0;
   color: #ffffff;
   font-size: 0.95rem;
 }
 
-.top-show-info p, .recent-show-info p {
+.top-show-info p,
+.recent-show-info p {
   margin: 0;
   color: #a0a0c4;
   font-size: 0.85rem;
@@ -608,7 +616,8 @@
   margin: 0;
 }
 
-.show-details-loading, .show-details-error {
+.show-details-loading,
+.show-details-error {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -711,4 +720,103 @@
 .modal-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.mark-next-button {
+  background: #00d4ff;
+  color: #0b0b1a;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.mark-next-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+.mark-next-button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.25);
+}
+
+.episodes-error-box {
+  background: #2a2a4f;
+  border: 1px solid #dc3545;
+  padding: 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+}
+.episodes-error-text {
+  color: #ff6868;
+  font-weight: 600;
+}
+.retry-load-button {
+  background: #00d4ff;
+  color: #0b0b1a;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.retry-load-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 212, 255, 0.25);
+}
+
+.episode-code {
+  color: #00d4ff;
+  font-weight: bold;
+  margin-right: 0.5rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+.episode-rating-inline {
+  color: #ffc107;
+  font-size: 0.9rem;
+}
+.episode-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 20px;
+  background: rgba(58, 58, 107, 0.35);
+  color: #a0a0c4;
+  transition: all 0.25s ease;
+}
+.episode-status-indicator.watched {
+  background: rgba(40, 167, 69, 0.15);
+  color: #28a745;
+  border: 1px solid rgba(40, 167, 69, 0.5);
+}
+.episode-status-indicator.pending {
+  border: 1px solid rgba(0, 212, 255, 0.35);
+}
+
+.auto-scroll-highlight {
+  animation: highlightPulse 2s ease;
+  box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.6);
+}
+@keyframes highlightPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(0, 212, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 212, 255, 0);
+  }
 }

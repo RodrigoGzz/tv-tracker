@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Show, Episode } from '../types';
 import { getShowDetails, getShowEpisodes } from '../services/tvmaze';
@@ -9,7 +9,7 @@ const ShowDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addShow, removeShow, isShowTracked } = useApp();
-  
+
   const [show, setShow] = useState<Show | null>(null);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,30 +20,7 @@ const ShowDetailsPage: React.FC = () => {
   const showId = parseInt(id || '0');
   const isTracked = isShowTracked(showId);
 
-  useEffect(() => {
-    if (!id) {
-      navigate('/');
-      return;
-    }
-    loadShowDetails();
-  }, [id]);
-
-  const loadShowDetails = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const showData = await getShowDetails(showId);
-      setShow(showData);
-      await loadEpisodes(showId);
-    } catch (error) {
-      console.error('Error loading show details:', error);
-      setError('Error al cargar los detalles de la serie');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadEpisodes = async (showId: number) => {
+  const loadEpisodes = useCallback(async (showId: number) => {
     setLoadingEpisodes(true);
     try {
       const episodeList = await getShowEpisodes(showId);
@@ -56,11 +33,34 @@ const ShowDetailsPage: React.FC = () => {
     } finally {
       setLoadingEpisodes(false);
     }
-  };
+  }, []);
+
+  const loadShowDetails = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const showData = await getShowDetails(showId);
+      setShow(showData);
+      await loadEpisodes(showId);
+    } catch (error) {
+      console.error('Error loading show details:', error);
+      setError('Error al cargar los detalles de la serie');
+    } finally {
+      setLoading(false);
+    }
+  }, [showId, loadEpisodes]);
+
+  useEffect(() => {
+    if (!id) {
+      navigate('/');
+      return;
+    }
+    loadShowDetails();
+  }, [id, navigate, loadShowDetails]);
 
   const handleToggleTracking = () => {
     if (!show) return;
-    
+
     if (isTracked) {
       removeShow(show.id);
     } else {
@@ -72,7 +72,7 @@ const ShowDetailsPage: React.FC = () => {
         currentSeason: 1,
         currentEpisode: 1,
         lastWatched: null,
-        isCompleted: false
+        isCompleted: false,
       };
       addShow(newTrackedShow);
     }
@@ -80,13 +80,13 @@ const ShowDetailsPage: React.FC = () => {
 
   const getSeasons = () => {
     if (episodes.length === 0) return [];
-    const seasonNumbers = episodes.map(ep => ep.season);
+    const seasonNumbers = episodes.map((ep) => ep.season);
     const uniqueSeasons = Array.from(new Set(seasonNumbers));
     return uniqueSeasons.sort((a, b) => a - b);
   };
 
   const getSeasonEpisodes = (season: number) => {
-    return episodes.filter(ep => ep.season === season);
+    return episodes.filter((ep) => ep.season === season);
   };
 
   const stripHtml = (html: string | null) => {
@@ -148,7 +148,7 @@ const ShowDetailsPage: React.FC = () => {
 
           <div className="show-info-detailed">
             <h1>{show.name}</h1>
-            
+
             <div className="show-meta">
               <div className="meta-item">
                 <span className="meta-label">Estado:</span>
@@ -156,19 +156,19 @@ const ShowDetailsPage: React.FC = () => {
                   {show.status}
                 </span>
               </div>
-              
+
               {show.rating.average && (
                 <div className="meta-item">
                   <span className="meta-label">Rating:</span>
                   <span className="meta-value rating">⭐ {show.rating.average}</span>
                 </div>
               )}
-              
+
               <div className="meta-item">
                 <span className="meta-label">Géneros:</span>
                 <span className="meta-value">{formatGenres(show.genres)}</span>
               </div>
-              
+
               {show.premiered && (
                 <div className="meta-item">
                   <span className="meta-label">Estreno:</span>
@@ -177,16 +177,14 @@ const ShowDetailsPage: React.FC = () => {
                   </span>
                 </div>
               )}
-              
+
               {show.ended && (
                 <div className="meta-item">
                   <span className="meta-label">Finalizada:</span>
-                  <span className="meta-value">
-                    {new Date(show.ended).toLocaleDateString()}
-                  </span>
+                  <span className="meta-value">{new Date(show.ended).toLocaleDateString()}</span>
                 </div>
               )}
-              
+
               {show.network && (
                 <div className="meta-item">
                   <span className="meta-label">Cadena:</span>
@@ -195,7 +193,7 @@ const ShowDetailsPage: React.FC = () => {
                   </span>
                 </div>
               )}
-              
+
               <div className="meta-item">
                 <span className="meta-label">Idioma:</span>
                 <span className="meta-value">{show.language}</span>
@@ -227,7 +225,7 @@ const ShowDetailsPage: React.FC = () => {
 
             {seasons.length > 1 && (
               <div className="season-tabs">
-                {seasons.map(season => (
+                {seasons.map((season) => (
                   <button
                     key={season}
                     onClick={() => setSelectedSeason(season)}
@@ -240,12 +238,12 @@ const ShowDetailsPage: React.FC = () => {
             )}
 
             <div className="episodes-grid">
-              {getSeasonEpisodes(selectedSeason).map(episode => (
+              {getSeasonEpisodes(selectedSeason).map((episode) => (
                 <div key={episode.id} className="episode-card">
                   <div className="episode-thumbnail">
                     {episode.image ? (
-                      <img 
-                        src={episode.image.medium || episode.image.original} 
+                      <img
+                        src={episode.image.medium || episode.image.original}
                         alt={episode.name}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -262,16 +260,16 @@ const ShowDetailsPage: React.FC = () => {
                         <div className="play-icon">▶️</div>
                       </div>
                     )}
-                    
+
                     <div className="episode-number">
                       S{episode.season}E{episode.number}
                     </div>
                   </div>
-                  
+
                   <div className="episode-content">
                     <div className="episode-header">
                       <h4 className="episode-title">{episode.name}</h4>
-                      
+
                       <div className="episode-meta">
                         {episode.airdate && (
                           <span className="episode-airdate">
@@ -279,24 +277,17 @@ const ShowDetailsPage: React.FC = () => {
                           </span>
                         )}
                         {episode.rating.average && (
-                          <span className="episode-rating">
-                            ⭐ {episode.rating.average}
-                          </span>
+                          <span className="episode-rating">⭐ {episode.rating.average}</span>
                         )}
                         {episode.runtime && (
-                          <span className="episode-runtime">
-                            {episode.runtime}min
-                          </span>
+                          <span className="episode-runtime">{episode.runtime}min</span>
                         )}
                       </div>
                     </div>
-                    
+
                     {episode.summary && (
-                      <p className="episode-summary">
-                        {stripHtml(episode.summary)}
-                      </p>
+                      <p className="episode-summary">{stripHtml(episode.summary)}</p>
                     )}
-                    
                   </div>
                 </div>
               ))}

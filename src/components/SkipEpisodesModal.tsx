@@ -16,7 +16,7 @@ const SkipEpisodesModal: React.FC<SkipEpisodesModalProps> = ({
   onConfirm,
   onCancel,
   skippedEpisodes,
-  targetEpisode
+  targetEpisode,
 }) => {
   if (!isOpen) return null;
 
@@ -26,27 +26,25 @@ const SkipEpisodesModal: React.FC<SkipEpisodesModalProps> = ({
         <div className="modal-header">
           <h3>⚠️ Episodios saltados</h3>
         </div>
-        
+
         <div className="modal-body">
           <p>
-            Estás intentando marcar como visto <strong>S{targetEpisode.season}E{targetEpisode.number} - {targetEpisode.name}</strong>, 
-            pero hay {skippedEpisodes.length} episodio{skippedEpisodes.length > 1 ? 's' : ''} anterior{skippedEpisodes.length > 1 ? 'es' : ''} sin ver:
+            Estás intentando marcar como visto{' '}
+            <strong>
+              S{targetEpisode.season}E{targetEpisode.number} - {targetEpisode.name}
+            </strong>
+            , pero hay {skippedEpisodes.length} episodio{skippedEpisodes.length > 1 ? 's' : ''}{' '}
+            anterior{skippedEpisodes.length > 1 ? 'es' : ''} sin ver:
           </p>
-          
+
           <p>¿Qué quieres hacer?</p>
         </div>
-        
+
         <div className="modal-actions">
-          <button 
-            className="modal-button track-button tracked" 
-            onClick={onConfirm}
-          >
+          <button className="modal-button track-button tracked" onClick={onConfirm}>
             ✅ Marcar todos como vistos
           </button>
-          <button 
-            className="modal-button track-button untracked" 
-            onClick={onCancel}
-          >
+          <button className="modal-button track-button untracked" onClick={onCancel}>
             🎯 Solo marcar este episodio
           </button>
         </div>
@@ -54,7 +52,5 @@ const SkipEpisodesModal: React.FC<SkipEpisodesModalProps> = ({
     </div>
   );
 };
-
-
 
 export default SkipEpisodesModal;

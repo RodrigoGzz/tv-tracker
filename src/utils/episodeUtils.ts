@@ -14,11 +14,11 @@ export const getPreviousUnwatchedEpisodes = (
     return a.number - b.number;
   });
 
-  const targetIndex = sortedEpisodes.findIndex(ep => ep.id === targetEpisode.id);
+  const targetIndex = sortedEpisodes.findIndex((ep) => ep.id === targetEpisode.id);
   if (targetIndex === -1) return [];
 
   const previousEpisodes = sortedEpisodes.slice(0, targetIndex);
-  return previousEpisodes.filter(ep => !watchedEpisodeIds.includes(ep.id));
+  return previousEpisodes.filter((ep) => !watchedEpisodeIds.includes(ep.id));
 };
 
 // Verificar si un episodio puede ser marcado como visto sin saltarse otros
@@ -27,7 +27,11 @@ export const canWatchEpisodeNext = (
   targetEpisode: Episode,
   watchedEpisodeIds: number[]
 ): boolean => {
-  const previousUnwatched = getPreviousUnwatchedEpisodes(episodes, targetEpisode, watchedEpisodeIds);
+  const previousUnwatched = getPreviousUnwatchedEpisodes(
+    episodes,
+    targetEpisode,
+    watchedEpisodeIds
+  );
   return previousUnwatched.length === 0;
 };
 
@@ -43,5 +47,5 @@ export const getNextEpisodeToWatch = (
     return a.number - b.number;
   });
 
-  return sortedEpisodes.find(ep => !watchedEpisodeIds.includes(ep.id)) || null;
+  return sortedEpisodes.find((ep) => !watchedEpisodeIds.includes(ep.id)) || null;
 };
