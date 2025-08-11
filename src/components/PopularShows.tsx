@@ -234,7 +234,6 @@ const PopularShows: React.FC = () => {
     return (
       <div className="popular-shows-loading">
         <LoadingSpinner />
-        <p>Cargando series populares...</p>
       </div>
     );
   }

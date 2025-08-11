@@ -40,7 +40,15 @@ const TrackedShowDetailsPage: React.FC = () => {
       const episodeList = await getShowEpisodes(trackedShow.show.id);
       setEpisodes(episodeList);
       if (episodeList.length > 0) {
-        setSelectedSeason(episodeList[0].season);
+        // Determinar la temporada a mostrar: la del primer episodio no visto
+        const watchedSet = new Set(trackedShow.watchedEpisodes);
+        const firstUnwatched = episodeList.find(ep => !watchedSet.has(ep.id));
+        if (firstUnwatched) {
+          setSelectedSeason(firstUnwatched.season);
+        } else {
+          // Si todos vistos, mostrar la última temporada
+            setSelectedSeason(episodeList[episodeList.length - 1].season);
+        }
       }
     } catch (error) {
       console.error('Error loading episodes:', error);
