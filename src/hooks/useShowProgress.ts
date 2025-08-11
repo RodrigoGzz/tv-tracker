@@ -12,11 +12,17 @@ export interface UseShowProgressResult {
 
 export function useShowProgress(showId: number, episodes?: Episode[]): UseShowProgressResult {
   const { trackedShows } = useApp();
-  const trackedShow = trackedShows.find(s => s.id === showId);
+  const trackedShow = trackedShows.find((s) => s.id === showId);
 
   return useMemo(() => {
     if (!trackedShow) {
-      return { trackedShow: undefined, totalEpisodes: 0, watchedCount: 0, progress: 0, isCompleted: false };
+      return {
+        trackedShow: undefined,
+        totalEpisodes: 0,
+        watchedCount: 0,
+        progress: 0,
+        isCompleted: false,
+      };
     }
     const watchedCount = trackedShow.watchedEpisodes.length;
     // Preferimos episodes param si se pasa (detalle ya tiene la lista completa), si no usamos totalEpisodes cacheado.

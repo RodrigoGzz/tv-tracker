@@ -11,9 +11,9 @@ const SettingsPage: React.FC = () => {
     const data = {
       trackedShows,
       exportDate: new Date().toISOString(),
-      version: '1.0'
+      version: '1.0',
     };
-    
+
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -28,7 +28,7 @@ const SettingsPage: React.FC = () => {
 
   const handleImport = () => {
     if (!importFile) return;
-    
+
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -49,7 +49,11 @@ const SettingsPage: React.FC = () => {
   };
 
   const clearAllData = () => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar todos los datos? Esta acción no se puede deshacer.')) {
+    if (
+      window.confirm(
+        '¿Estás seguro de que quieres eliminar todos los datos? Esta acción no se puede deshacer.'
+      )
+    ) {
       localStorage.removeItem('tv-tracker-data');
       window.location.reload();
     }
@@ -91,17 +95,14 @@ const SettingsPage: React.FC = () => {
         <div className="settings-card">
           <h2>💾 Backup y Restauración</h2>
           <div className="settings-actions">
-            <button 
+            <button
               className="settings-btn primary"
               onClick={() => setShowExportModal(true)}
               disabled={trackedShows.length === 0}
             >
               📤 Exportar Datos
             </button>
-            <button 
-              className="settings-btn secondary"
-              onClick={() => setShowImportModal(true)}
-            >
+            <button className="settings-btn secondary" onClick={() => setShowImportModal(true)}>
               📥 Importar Datos
             </button>
           </div>
@@ -114,7 +115,7 @@ const SettingsPage: React.FC = () => {
         <div className="settings-card">
           <h2>🧹 Limpieza de Datos</h2>
           <div className="settings-actions">
-            <button 
+            <button
               className="settings-btn danger"
               onClick={clearAllData}
               disabled={trackedShows.length === 0}
@@ -165,7 +166,7 @@ const SettingsPage: React.FC = () => {
       {/* Modal de exportación */}
       {showExportModal && (
         <div className="modal-overlay" onClick={() => setShowExportModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>Exportar Datos</h3>
             <p>Se descargará un archivo JSON con todas tus series y progreso.</p>
             <div className="modal-actions">
@@ -183,7 +184,7 @@ const SettingsPage: React.FC = () => {
       {/* Modal de importación */}
       {showImportModal && (
         <div className="modal-overlay" onClick={() => setShowImportModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>Importar Datos</h3>
             <p>Selecciona un archivo de backup de TV Tracker para restaurar tus datos.</p>
             <input
@@ -196,11 +197,7 @@ const SettingsPage: React.FC = () => {
               <button className="modal-btn secondary" onClick={() => setShowImportModal(false)}>
                 Cancelar
               </button>
-              <button 
-                className="modal-btn primary" 
-                onClick={handleImport}
-                disabled={!importFile}
-              >
+              <button className="modal-btn primary" onClick={handleImport} disabled={!importFile}>
                 Importar
               </button>
             </div>

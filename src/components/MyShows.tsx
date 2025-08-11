@@ -22,7 +22,9 @@ const MyShows: React.FC = () => {
       <div className="my-shows-empty">
         <div className="empty-state">
           <h2>No tienes series en seguimiento</h2>
-          <p>Busca series y añádelas a tu lista para empezar a hacer seguimiento de tus episodios.</p>
+          <p>
+            Busca series y añádelas a tu lista para empezar a hacer seguimiento de tus episodios.
+          </p>
           <div className="empty-tips">
             <h3>💡 Consejos:</h3>
             <ul>
@@ -39,11 +41,16 @@ const MyShows: React.FC = () => {
 
   // Estadísticas generales
   const totalShows = trackedShows.length;
-  const totalWatchedEpisodes = trackedShows.reduce((sum, show) => sum + show.watchedEpisodes.length, 0);
-  const completedShows = trackedShows.filter(show => show.isCompleted).length;
+  const totalWatchedEpisodes = trackedShows.reduce(
+    (sum, show) => sum + show.watchedEpisodes.length,
+    0
+  );
+  const completedShows = trackedShows.filter((show) => show.isCompleted).length;
 
   const getImageUrl = (trackedShow: any) => {
-    return trackedShow.show.image?.medium || trackedShow.show.image?.original || '/placeholder-show.jpg';
+    return (
+      trackedShow.show.image?.medium || trackedShow.show.image?.original || '/placeholder-show.jpg'
+    );
   };
 
   const getProgress = (trackedShow: any) => {
@@ -84,12 +91,8 @@ const MyShows: React.FC = () => {
             if (!a.lastWatched && b.lastWatched) return 1;
             return a.show.name.localeCompare(b.show.name);
           })
-          .map(trackedShow => (
-            <Link
-              key={trackedShow.id}
-              to={`/my-shows/${trackedShow.id}`}
-              className="my-show-card"
-            >
+          .map((trackedShow) => (
+            <Link key={trackedShow.id} to={`/my-shows/${trackedShow.id}`} className="my-show-card">
               <div className="my-show-image">
                 <img
                   src={getImageUrl(trackedShow)}

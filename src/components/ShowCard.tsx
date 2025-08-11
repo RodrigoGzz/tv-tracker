@@ -25,10 +25,10 @@ const ShowCard: React.FC<ShowCardProps> = ({ show, isDetailed = false, onTrack }
         currentSeason: 1,
         currentEpisode: 1,
         lastWatched: null,
-        isCompleted: false
+        isCompleted: false,
       };
       addShow(newTrackedShow);
-      
+
       // Llamar al callback si existe (para la animación de explosión)
       if (onTrack) {
         onTrack();
@@ -64,26 +64,22 @@ const ShowCard: React.FC<ShowCardProps> = ({ show, isDetailed = false, onTrack }
           {show.rating.average ? `⭐ ${show.rating.average}` : 'Sin rating'}
         </div>
       </div>
-      
+
       <div className="show-info">
         <h3 className="show-title">{show.name}</h3>
-        
-        {show.genres.length > 0 && (
-          <p className="show-genres">{formatGenres(show.genres)}</p>
-        )}
-        
+
+        {show.genres.length > 0 && <p className="show-genres">{formatGenres(show.genres)}</p>}
+
         <div className="show-details">
           {show.status && <span className="show-status">{show.status}</span>}
-          {show.premiered && <span className="show-year">({new Date(show.premiered).getFullYear()})</span>}
+          {show.premiered && (
+            <span className="show-year">({new Date(show.premiered).getFullYear()})</span>
+          )}
           {show.network && <span className="show-network">{show.network.name}</span>}
         </div>
-        
-        {isDetailed && (
-          <p className="show-summary">
-            {stripHtml(show.summary)}
-          </p>
-        )}
-        
+
+        {isDetailed && <p className="show-summary">{stripHtml(show.summary)}</p>}
+
         <div className="show-actions">
           <button
             onClick={handleToggleTracking}
@@ -91,10 +87,7 @@ const ShowCard: React.FC<ShowCardProps> = ({ show, isDetailed = false, onTrack }
           >
             {isTracked ? '✓ Siguiendo' : '+ Seguir'}
           </button>
-          <Link
-            to={`/show/${show.id}`}
-            className="details-button"
-          >
+          <Link to={`/show/${show.id}`} className="details-button">
             📖 Ver detalles
           </Link>
         </div>

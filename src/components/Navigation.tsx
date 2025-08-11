@@ -10,7 +10,7 @@ const Navigation: React.FC = () => {
     { id: '/my-shows', label: 'Mis Series', icon: '📺' },
     { id: '/search', label: 'Buscar', icon: '🔎' },
     { id: '/stats', label: 'Estadísticas', icon: '📊' },
-    { id: '/settings', label: 'Configuración', icon: '⚙️' }
+    { id: '/settings', label: 'Configuración', icon: '⚙️' },
   ];
 
   return (
@@ -22,16 +22,13 @@ const Navigation: React.FC = () => {
         </Link>
 
         {/* Mobile menu button */}
-        <button 
-          className="mobile-menu-button"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-        >
+        <button className="mobile-menu-button" onClick={() => setIsMenuOpen(!isMenuOpen)}>
           ☰
         </button>
 
         {/* Navigation tabs */}
         <div className={`nav-tabs ${isMenuOpen ? 'mobile-open' : ''}`}>
-          {tabs.map(tab => (
+          {tabs.map((tab) => (
             <Link
               key={tab.id}
               to={tab.id}

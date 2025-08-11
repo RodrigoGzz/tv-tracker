@@ -31,7 +31,12 @@ const App: React.FC = () => {
             </Routes>
           </main>
           <footer className="app-footer">
-            <p>TV Tracker - Datos proporcionados por <a href="https://www.tvmaze.com/api" target="_blank" rel="noopener noreferrer">TVMaze API</a></p>
+            <p>
+              TV Tracker - Datos proporcionados por{' '}
+              <a href="https://www.tvmaze.com/api" target="_blank" rel="noopener noreferrer">
+                TVMaze API
+              </a>
+            </p>
           </footer>
         </div>
       </Router>

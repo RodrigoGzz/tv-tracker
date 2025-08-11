@@ -25,7 +25,7 @@ const ShowHeader: React.FC<ShowHeaderProps> = ({
   onRemove,
   disableMarkNext,
   getImageUrl,
-  getNextEpisodeToWatch
+  getNextEpisodeToWatch,
 }) => {
   return (
     <div className="tracked-show-details-main">
@@ -56,10 +56,7 @@ const ShowHeader: React.FC<ShowHeaderProps> = ({
           >
             ➜ Marcar siguiente
           </button>
-          <button
-            onClick={onRemove}
-            className="remove-button-detailed"
-          >
+          <button onClick={onRemove} className="remove-button-detailed">
             ✕ Dejar de seguir
           </button>
         </div>

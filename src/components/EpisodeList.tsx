@@ -10,10 +10,10 @@ interface EpisodeListProps {
 }
 
 const EpisodeList: React.FC<EpisodeListProps> = ({ trackedShow, episodes, season, onToggle }) => {
-  const seasonEpisodes = episodes.filter(ep => ep.season === season);
+  const seasonEpisodes = episodes.filter((ep) => ep.season === season);
   return (
     <div className="episodes-list">
-      {seasonEpisodes.map(episode => {
+      {seasonEpisodes.map((episode) => {
         const watched = isEpisodeWatched(trackedShow.show.id, episode.id);
         return (
           <div
@@ -23,19 +23,19 @@ const EpisodeList: React.FC<EpisodeListProps> = ({ trackedShow, episodes, season
             onClick={() => onToggle(episode)}
           >
             <label className="episode-checkbox" onClick={(e) => e.stopPropagation()}>
-              <input
-                type="checkbox"
-                checked={watched}
-                onChange={() => onToggle(episode)}
-              />
+              <input type="checkbox" checked={watched} onChange={() => onToggle(episode)} />
             </label>
             <div className="episode-info">
               <div className="episode-name">
-                <span className="episode-code">S{episode.season}E{episode.number}</span>
+                <span className="episode-code">
+                  S{episode.season}E{episode.number}
+                </span>
                 {episode.name}
               </div>
               {episode.airdate && (
-                <div className="episode-date">📅 {new Date(episode.airdate).toLocaleDateString()}</div>
+                <div className="episode-date">
+                  📅 {new Date(episode.airdate).toLocaleDateString()}
+                </div>
               )}
               {episode.rating.average && (
                 <div className="episode-rating-inline">⭐ {episode.rating.average}</div>

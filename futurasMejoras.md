@@ -1,6 +1,5 @@
 # Futuras Mejoras y Recomendaciones
 
-10. Añadir ESLint + Prettier (consistencia de código).
 11. Centralizar estilos de colores (variables CSS) para facilitar temas.
 12. Tema claro/oscuro y selector automático según preferencia del sistema.
 13. Contraste de colores validado (usar herramienta WCAG).

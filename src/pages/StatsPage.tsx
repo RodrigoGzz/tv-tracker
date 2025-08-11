@@ -16,17 +16,23 @@ const StatsPage: React.FC = () => {
 
   // Estadísticas detalladas
   const totalShows = trackedShows.length;
-  const totalWatchedEpisodes = trackedShows.reduce((sum, show) => sum + show.watchedEpisodes.length, 0);
-  const completedShows = trackedShows.filter(show => show.isCompleted).length;
-  const activeShows = trackedShows.filter(show => !show.isCompleted).length;
+  const totalWatchedEpisodes = trackedShows.reduce(
+    (sum, show) => sum + show.watchedEpisodes.length,
+    0
+  );
+  const completedShows = trackedShows.filter((show) => show.isCompleted).length;
+  const activeShows = trackedShows.filter((show) => !show.isCompleted).length;
 
   // Géneros más populares
-  const genreCounts = trackedShows.reduce((acc, show) => {
-    show.show.genres.forEach(genre => {
-      acc[genre] = (acc[genre] || 0) + 1;
-    });
-    return acc;
-  }, {} as Record<string, number>);
+  const genreCounts = trackedShows.reduce(
+    (acc, show) => {
+      show.show.genres.forEach((genre) => {
+        acc[genre] = (acc[genre] || 0) + 1;
+      });
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   const topGenres = Object.entries(genreCounts)
     .sort(([, a], [, b]) => b - a)
@@ -34,7 +40,7 @@ const StatsPage: React.FC = () => {
 
   // Shows con más episodios vistos
   const topWatchedShows = trackedShows
-    .filter(show => show.watchedEpisodes.length > 0)
+    .filter((show) => show.watchedEpisodes.length > 0)
     .sort((a, b) => b.watchedEpisodes.length - a.watchedEpisodes.length)
     .slice(0, 5);
 
@@ -42,7 +48,7 @@ const StatsPage: React.FC = () => {
   const averageEpisodeLength = 45; // minutos
   const totalMinutesWatched = totalWatchedEpisodes * averageEpisodeLength;
   const totalHours = Math.round(totalMinutesWatched / 60);
-  const totalDays = Math.round(totalHours / 24 * 10) / 10;
+  const totalDays = Math.round((totalHours / 24) * 10) / 10;
 
   // Series añadidas recientemente
   const recentlyAdded = trackedShows
@@ -93,7 +99,9 @@ const StatsPage: React.FC = () => {
               <span className="stat-label">Días equivalentes</span>
             </div>
             <div className="stat-item">
-              <span className="stat-number">{Math.round(totalMinutesWatched / totalShows) || 0}min</span>
+              <span className="stat-number">
+                {Math.round(totalMinutesWatched / totalShows) || 0}min
+              </span>
               <span className="stat-label">Promedio por serie</span>
             </div>
           </div>
@@ -109,8 +117,8 @@ const StatsPage: React.FC = () => {
                   <span className="genre-name">{genre}</span>
                   <span className="genre-count">{count} series</span>
                   <div className="genre-bar">
-                    <div 
-                      className="genre-fill" 
+                    <div
+                      className="genre-fill"
                       style={{ width: `${(count / topGenres[0][1]) * 100}%` }}
                     ></div>
                   </div>
@@ -129,8 +137,8 @@ const StatsPage: React.FC = () => {
             {topWatchedShows.length > 0 ? (
               topWatchedShows.map((trackedShow) => (
                 <div key={trackedShow.id} className="top-show-item">
-                  <img 
-                    src={trackedShow.show.image?.medium || '/placeholder-show.jpg'} 
+                  <img
+                    src={trackedShow.show.image?.medium || '/placeholder-show.jpg'}
                     alt={trackedShow.show.name}
                     className="top-show-image"
                   />
@@ -153,8 +161,8 @@ const StatsPage: React.FC = () => {
             {recentlyAdded.length > 0 ? (
               recentlyAdded.map((trackedShow) => (
                 <div key={trackedShow.id} className="recent-show-item">
-                  <img 
-                    src={trackedShow.show.image?.medium || '/placeholder-show.jpg'} 
+                  <img
+                    src={trackedShow.show.image?.medium || '/placeholder-show.jpg'}
                     alt={trackedShow.show.name}
                     className="recent-show-image"
                   />
@@ -176,19 +184,32 @@ const StatsPage: React.FC = () => {
           <div className="progress-overview">
             {trackedShows.length > 0 ? (
               <div className="progress-stats">
-                <p>🎯 Promedio de finalización: {Math.round((completedShows / totalShows) * 100)}%</p>
-                <p>📈 Episodios promedio por serie: {Math.round(totalWatchedEpisodes / totalShows) || 0}</p>
-                <p>⏰ Última actividad: {
-                  trackedShows
-                    .filter(show => show.lastWatched)
-                    .sort((a, b) => new Date(b.lastWatched!).getTime() - new Date(a.lastWatched!).getTime())[0]
-                    ?.lastWatched 
-                    ? new Date(trackedShows
-                      .filter(show => show.lastWatched)
-                      .sort((a, b) => new Date(b.lastWatched!).getTime() - new Date(a.lastWatched!).getTime())[0]
-                      .lastWatched!).toLocaleDateString()
-                    : 'Sin actividad reciente'
-                }</p>
+                <p>
+                  🎯 Promedio de finalización: {Math.round((completedShows / totalShows) * 100)}%
+                </p>
+                <p>
+                  📈 Episodios promedio por serie:{' '}
+                  {Math.round(totalWatchedEpisodes / totalShows) || 0}
+                </p>
+                <p>
+                  ⏰ Última actividad:{' '}
+                  {trackedShows
+                    .filter((show) => show.lastWatched)
+                    .sort(
+                      (a, b) =>
+                        new Date(b.lastWatched!).getTime() - new Date(a.lastWatched!).getTime()
+                    )[0]?.lastWatched
+                    ? new Date(
+                        trackedShows
+                          .filter((show) => show.lastWatched)
+                          .sort(
+                            (a, b) =>
+                              new Date(b.lastWatched!).getTime() -
+                              new Date(a.lastWatched!).getTime()
+                          )[0].lastWatched!
+                      ).toLocaleDateString()
+                    : 'Sin actividad reciente'}
+                </p>
               </div>
             ) : (
               <div className="no-data">

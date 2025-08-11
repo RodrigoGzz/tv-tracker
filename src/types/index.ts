@@ -85,7 +85,7 @@ export interface LocalStorageData {
 
 export interface ScheduleItem {
   id: number;
-  url: string;  
+  url: string;
   name: string;
   season: number | null;
   number: number | null;

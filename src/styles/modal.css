@@ -153,16 +153,15 @@
   .modal-overlay {
     padding: 0.5rem;
   }
-  
+
   .modal-actions {
     flex-direction: column;
   }
-  
+
   .modal-button {
     padding: 1rem;
   }
 }
-
 
 .modal-button.secondary:hover {
   background: #4a4a7b;
@@ -200,11 +199,11 @@
   .modal-overlay {
     padding: 0.5rem;
   }
-  
+
   .modal-actions {
     flex-direction: column;
   }
-  
+
   .modal-button {
     padding: 1rem;
   }
