@@ -74,6 +74,8 @@ export interface TrackedShow {
   currentEpisode: number;
   lastWatched: string | null;
   isCompleted: boolean;
+  totalEpisodes?: number; // cached total episode count
+  totalEpisodesUpdatedAt?: string; // ISO timestamp when totalEpisodes was refreshed
 }
 
 export interface LocalStorageData {

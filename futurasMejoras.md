@@ -1,14 +1,5 @@
 # Futuras Mejoras y Recomendaciones
 
-1. Filtro por: vistos / pendientes / próximos a emitirse.
-2. Scroll automático al primer episodio pendiente al abrir detalles.
-3. Botón "Marcar siguiente" que automáticamente marca el próximo episodio válido.
-4. Manejo visual de errores en carga de episodios (retry button).
-5. Estado de carga granular por serie (spinner en cada card si falta info específica).
-6. Persistir el conteo de episodios junto a la serie para evitar fetch duplicado (mover caché a contexto y compartir con detalle).
-7. Extraer lógica de progreso a un hook reutilizable (useShowProgress(showId)).
-8. Memoización de cálculos de progreso.
-9. Extraer bloques grandes en `TrackedShowDetailsPage` (EpisodeList, ShowHeader, ProgressBar).
 10. Añadir ESLint + Prettier (consistencia de código).
 11. Centralizar estilos de colores (variables CSS) para facilitar temas.
 12. Tema claro/oscuro y selector automático según preferencia del sistema.

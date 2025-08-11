@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { TrackedShow, Episode } from '../types';
 import { useApp } from '../context/AppContext';
@@ -7,6 +7,9 @@ import { markEpisodeWatched, markEpisodeUnwatched, markMultipleEpisodesWatched, 
 import { getPreviousUnwatchedEpisodes, canWatchEpisodeNext } from '../utils/episodeUtils';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SkipEpisodesModal from '../components/SkipEpisodesModal';
+import { useShowProgress } from '../hooks/useShowProgress';
+import ShowHeader from '../components/ShowHeader';
+import EpisodeList from '../components/EpisodeList';
 
 const TrackedShowDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,9 +23,13 @@ const TrackedShowDetailsPage: React.FC = () => {
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [pendingEpisode, setPendingEpisode] = useState<Episode | null>(null);
   const [skippedEpisodes, setSkippedEpisodes] = useState<Episode[]>([]);
+  const firstPendingIdRef = useRef<number | null>(null);
+  const hasScrolledRef = useRef(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const showId = parseInt(id || '0');
   const trackedShow = trackedShows.find(ts => ts.id === showId);
+  const progressData = useShowProgress(showId, episodes);
 
   useEffect(() => {
     if (!trackedShow) {
@@ -34,28 +41,48 @@ const TrackedShowDetailsPage: React.FC = () => {
 
   const loadEpisodes = async () => {
     if (!trackedShow) return;
-    
     setLoading(true);
+    setLoadError(null);
     try {
       const episodeList = await getShowEpisodes(trackedShow.show.id);
       setEpisodes(episodeList);
       if (episodeList.length > 0) {
-        // Determinar la temporada a mostrar: la del primer episodio no visto
         const watchedSet = new Set(trackedShow.watchedEpisodes);
         const firstUnwatched = episodeList.find(ep => !watchedSet.has(ep.id));
         if (firstUnwatched) {
           setSelectedSeason(firstUnwatched.season);
+          firstPendingIdRef.current = firstUnwatched.id;
+          hasScrolledRef.current = false;
         } else {
-          // Si todos vistos, mostrar la última temporada
-            setSelectedSeason(episodeList[episodeList.length - 1].season);
+          setSelectedSeason(episodeList[episodeList.length - 1].season);
+          firstPendingIdRef.current = null;
         }
       }
     } catch (error) {
       console.error('Error loading episodes:', error);
+      setLoadError('No se pudieron cargar los episodios.');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (loading) return;
+    if (activeTab !== 'episodes') return;
+    if (hasScrolledRef.current) return;
+    if (!firstPendingIdRef.current) return;
+    // pequeño delay para asegurar render
+    const t = setTimeout(() => {
+      const el = document.getElementById(`episode-${firstPendingIdRef.current}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('auto-scroll-highlight');
+        setTimeout(() => el.classList.remove('auto-scroll-highlight'), 2000);
+        hasScrolledRef.current = true;
+      }
+    }, 150);
+    return () => clearTimeout(t);
+  }, [loading, activeTab, selectedSeason, episodes]);
 
   const handleEpisodeToggle = (episode: Episode) => {
     if (!trackedShow) return;
@@ -151,22 +178,9 @@ const TrackedShowDetailsPage: React.FC = () => {
     return uniqueSeasons.sort((a, b) => a - b);
   };
 
-  const getSeasonEpisodes = (season: number) => {
-    return episodes.filter(ep => ep.season === season);
-  };
-
-  const getWatchedCount = () => {
-    return trackedShow?.watchedEpisodes.length || 0;
-  };
-
-  const getTotalEpisodes = () => {
-    return episodes.length;
-  };
-
-  const getProgress = () => {
-    if (episodes.length === 0) return 0;
-    return Math.round((getWatchedCount() / getTotalEpisodes()) * 100);
-  };
+  const getWatchedCount = () => progressData.watchedCount;
+  const getTotalEpisodes = () => progressData.totalEpisodes;
+  const getProgress = () => progressData.progress;
 
   const stripHtml = (html: string | null) => {
     if (!html) return 'Sin descripción disponible';
@@ -179,6 +193,41 @@ const TrackedShowDetailsPage: React.FC = () => {
 
   const getImageUrl = () => {
     return trackedShow?.show.image?.original || trackedShow?.show.image?.medium || '/placeholder-show.jpg';
+  };
+
+  const getOrderedEpisodes = () => {
+    return [...episodes].sort((a,b)=>{
+      if (a.season === b.season) return a.number - b.number;
+      return a.season - b.season;
+    });
+  };
+
+  const getNextEpisodeToWatch = (): Episode | null => {
+    if (!trackedShow) return null;
+    const watchedSet = new Set(trackedShow.watchedEpisodes);
+    const ordered = getOrderedEpisodes();
+    return ordered.find(ep => !watchedSet.has(ep.id)) || null;
+  };
+
+  const handleMarkNextEpisode = () => {
+    if (!trackedShow) return;
+    const nextEp = getNextEpisodeToWatch();
+    if (!nextEp) return;
+    // marcar directamente (no hay posibilidad de saltarse anteriores porque tomamos el primero no visto)
+    markEpisodeWatched(trackedShow.show.id, nextEp.id);
+    const updatedShow: TrackedShow = {
+      ...trackedShow,
+      watchedEpisodes: [...trackedShow.watchedEpisodes, nextEp.id],
+      lastWatched: new Date().toISOString()
+    };
+    updateShow(updatedShow);
+    // si el episodio está en otra temporada, cambiar selector
+    if (selectedSeason !== nextEp.season) {
+      setSelectedSeason(nextEp.season);
+    }
+    // preparar scroll/higlight a siguiente episodios
+    firstPendingIdRef.current = getNextEpisodeToWatch()?.id || null;
+    hasScrolledRef.current = false;
   };
 
   if (!trackedShow) {
@@ -205,47 +254,18 @@ const TrackedShowDetailsPage: React.FC = () => {
 
       <div className="tracked-show-details-content">
         <div className="tracked-show-details-main">
-          <div className="tracked-show-poster">
-            <img
-              src={getImageUrl()}
-              alt={trackedShow.show.name}
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/placeholder-show.jpg';
-              }}
-            />
-          </div>
-
-          <div className="tracked-show-info-detailed">
-            <h1>{trackedShow.show.name}</h1>
-            
-            <div className="progress-info-detailed">
-              <div className="progress-bar-detailed">
-                <div 
-                  className="progress-fill-detailed" 
-                  style={{ width: `${getProgress()}%` }}
-                ></div>
-              </div>
-              <span className="progress-text-detailed">
-                {getWatchedCount()}/{getTotalEpisodes()} episodios ({getProgress()}%)
-              </span>
-            </div>
-
-            {trackedShow.lastWatched && (
-              <p className="last-watched-detailed">
-                Último visto: {new Date(trackedShow.lastWatched).toLocaleDateString()}
-              </p>
-            )}
-
-            <div className="tracked-show-actions-detailed">
-              <button
-                onClick={handleRemoveShow}
-                className="remove-button-detailed"
-              >
-                ✕ Dejar de seguir
-              </button>
-            </div>
-          </div>
+          <ShowHeader
+            trackedShow={trackedShow}
+            progress={getProgress()}
+            watched={getWatchedCount()}
+            total={getTotalEpisodes()}
+            lastWatched={trackedShow.lastWatched}
+            onMarkNext={handleMarkNextEpisode}
+            onRemove={handleRemoveShow}
+            disableMarkNext={loading}
+            getImageUrl={getImageUrl}
+            getNextEpisodeToWatch={getNextEpisodeToWatch}
+          />
         </div>
 
         <div className="tracked-show-tabs">
@@ -267,6 +287,14 @@ const TrackedShowDetailsPage: React.FC = () => {
           <div className="episodes-tab">
             {loading ? (
               <LoadingSpinner />
+            ) : loadError ? (
+              <div className="episodes-error-box">
+                <div className="episodes-error-text">⚠️ {loadError}</div>
+                <button
+                  onClick={loadEpisodes}
+                  className="retry-load-button"
+                >Reintentar</button>
+              </div>
             ) : (
               <>
                 {seasons.length > 1 && (
@@ -284,55 +312,12 @@ const TrackedShowDetailsPage: React.FC = () => {
                     </select>
                   </div>
                 )}
-                
-                <div className="episodes-list">
-                  {getSeasonEpisodes(selectedSeason).map(episode => (
-                    <div 
-                      key={episode.id} 
-                      className={`episode-item ${isEpisodeWatched(trackedShow.show.id, episode.id) ? 'watched' : ''}`}
-                      onClick={() => handleEpisodeToggle(episode)}
-                    >
-                      <label className="episode-checkbox" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          checked={isEpisodeWatched(trackedShow.show.id, episode.id)}
-                          onChange={() => handleEpisodeToggle(episode)}
-                        />
-                      </label>
-                      
-                      <div className="episode-info">
-                        <div className="episode-name">
-                          <span style={{ color: '#00d4ff', fontWeight: 'bold', marginRight: '0.5rem' }}>
-                            S{episode.season}E{episode.number}
-                          </span>
-                          {episode.name}
-                        </div>
-                        {episode.airdate && (
-                          <div className="episode-date">
-                            📅 {new Date(episode.airdate).toLocaleDateString()}
-                          </div>
-                        )}
-                        {episode.rating.average && (
-                          <div style={{ color: '#ffc107', fontSize: '0.9rem' }}>
-                            ⭐ {episode.rating.average}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '0.5rem',
-                        color: isEpisodeWatched(trackedShow.show.id, episode.id) ? '#28a745' : '#a0a0c4'
-                      }}>
-                        {isEpisodeWatched(trackedShow.show.id, episode.id) ? '✅' : '⏸️'}
-                        <span style={{ fontSize: '0.9rem' }}>
-                          {isEpisodeWatched(trackedShow.show.id, episode.id) ? 'Visto' : 'Pendiente'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <EpisodeList
+                  trackedShow={trackedShow}
+                  episodes={episodes}
+                  season={selectedSeason}
+                  onToggle={handleEpisodeToggle}
+                />
               </>
             )}
           </div>

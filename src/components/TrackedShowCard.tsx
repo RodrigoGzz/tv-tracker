@@ -6,6 +6,7 @@ import { markEpisodeWatched, markEpisodeUnwatched, markMultipleEpisodesWatched, 
 import { getPreviousUnwatchedEpisodes, canWatchEpisodeNext } from '../utils/episodeUtils';
 import LoadingSpinner from './LoadingSpinner';
 import SkipEpisodesModal from './SkipEpisodesModal';
+import { useShowProgress } from '../hooks/useShowProgress';
 
 interface TrackedShowCardProps {
   trackedShow: TrackedShow;
@@ -22,6 +23,8 @@ const TrackedShowCard: React.FC<TrackedShowCardProps> = ({ trackedShow }) => {
   const [skippedEpisodes, setSkippedEpisodes] = useState<Episode[]>([]);
 
   const { show } = trackedShow;
+
+  const progressData = useShowProgress(trackedShow.id, episodes);
 
   useEffect(() => {
     if (showEpisodes && episodes.length === 0) {
@@ -128,19 +131,6 @@ const TrackedShowCard: React.FC<TrackedShowCardProps> = ({ trackedShow }) => {
     return episodes.filter(ep => ep.season === season);
   };
 
-  const getWatchedCount = () => {
-    return trackedShow.watchedEpisodes.length;
-  };
-
-  const getTotalEpisodes = () => {
-    return episodes.length;
-  };
-
-  const getProgress = () => {
-    if (episodes.length === 0) return 0;
-    return Math.round((getWatchedCount() / getTotalEpisodes()) * 100);
-  };
-
   const getImageUrl = () => {
     return show.image?.medium || show.image?.original || '/placeholder-show.jpg';
   };
@@ -168,11 +158,11 @@ const TrackedShowCard: React.FC<TrackedShowCardProps> = ({ trackedShow }) => {
             <div className="progress-bar">
               <div 
                 className="progress-fill" 
-                style={{ width: `${getProgress()}%` }}
+                style={{ ['--progress-width' as any]: `${progressData.progress}%` }}
               ></div>
             </div>
             <span className="progress-text">
-              {getWatchedCount()}/{getTotalEpisodes()} episodios ({getProgress()}%)
+              {progressData.watchedCount}/{progressData.totalEpisodes} episodios ({progressData.progress}%)
             </span>
           </div>
           
