@@ -2,9 +2,89 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import LoadingSpinner from './LoadingSpinner';
+import { getShowEpisodes } from '../services/tvmaze';
+
+// Caché local de conteo de episodios
+interface EpisodesCacheEntry { total: number; updatedAt: string; status: string; }
+const EPISODES_CACHE_KEY = 'episodesCountCache:v1';
+const RUNNING_TTL_HOURS = 12; // refrescar cada 12h para series en emisión
+
+function loadEpisodesCache(): Record<number, EpisodesCacheEntry> {
+  try {
+    const raw = localStorage.getItem(EPISODES_CACHE_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+function saveEpisodesCache(cache: Record<number, EpisodesCacheEntry>) {
+  try { localStorage.setItem(EPISODES_CACHE_KEY, JSON.stringify(cache)); } catch {}
+}
+function isStale(entry: EpisodesCacheEntry): boolean {
+  if (!entry) return true;
+  // Si la serie está terminada, no caduca
+  if (entry.status && entry.status.toLowerCase() === 'ended') return false;
+  const updated = new Date(entry.updatedAt).getTime();
+  const ageHours = (Date.now() - updated) / 36e5;
+  return ageHours > RUNNING_TTL_HOURS;
+}
 
 const MyShows: React.FC = () => {
   const { trackedShows, loading } = useApp();
+
+  // Estado basado en caché inicial
+  const [episodesCount, setEpisodesCount] = React.useState<Record<number, number>>(() => {
+    const cache = loadEpisodesCache();
+    const initial: Record<number, number> = {};
+    Object.entries(cache).forEach(([id, entry]) => { initial[Number(id)] = entry.total; });
+    return initial;
+  });
+  const cacheRef = React.useRef<Record<number, EpisodesCacheEntry>>(loadEpisodesCache());
+  const fetchingRef = React.useRef<Set<number>>(new Set());
+
+  // Efecto para actualizar/obtener totales sólo cuando sea necesario
+  React.useEffect(() => {
+    let cancelled = false;
+    const updateCounts = async () => {
+      const promises: Promise<void>[] = [];
+      for (const ts of trackedShows) {
+        const showId = ts.show.id;
+        const status = ts.show.status || '';
+        const cacheEntry = cacheRef.current[showId];
+        if (!cacheEntry || isStale(cacheEntry)) {
+          if (fetchingRef.current.has(showId)) continue;
+          fetchingRef.current.add(showId);
+          promises.push((async () => {
+            try {
+              const episodes = await getShowEpisodes(showId);
+              if (cancelled) return;
+              cacheRef.current[showId] = { total: episodes.length, updatedAt: new Date().toISOString(), status };
+              setEpisodesCount(prev => ({ ...prev, [showId]: episodes.length }));
+              saveEpisodesCache(cacheRef.current);
+            } catch (e) {
+              console.error('Error obteniendo episodios para show', showId, e);
+              if (!cancelled) {
+                cacheRef.current[showId] = { total: 0, updatedAt: new Date().toISOString(), status };
+                setEpisodesCount(prev => ({ ...prev, [showId]: 0 }));
+                saveEpisodesCache(cacheRef.current);
+              }
+            } finally {
+              fetchingRef.current.delete(showId);
+            }
+          })());
+        } else {
+          // Asegurar que el estado tenga el valor (por si entró un show nuevo ya cacheado)
+          if (episodesCount[showId] == null) {
+            setEpisodesCount(prev => ({ ...prev, [showId]: cacheEntry.total }));
+          }
+        }
+      }
+      await Promise.all(promises);
+    };
+    if (trackedShows.length > 0) updateCounts();
+    return () => { cancelled = true; };
+  }, [trackedShows]);
 
   if (loading) {
     return (
@@ -45,10 +125,10 @@ const MyShows: React.FC = () => {
   };
 
   const getProgress = (trackedShow: any) => {
-    // Esta función calculará el progreso cuando tengamos los episodios
-    // Por ahora retornamos un valor basado en episodios vistos
-    const watchedCount = trackedShow.watchedEpisodes.length;
-    return watchedCount > 0 ? Math.min(watchedCount * 5, 100) : 0; // Estimación temporal
+    const total = episodesCount[trackedShow.show.id];
+    if (!total || total === 0) return 0;
+    const watched = trackedShow.watchedEpisodes.length;
+    return Math.round((watched / total) * 100);
   };
 
   return (
@@ -98,19 +178,19 @@ const MyShows: React.FC = () => {
                   }}
                 />
                 <div className="progress-overlay">
-                  <div 
-                    className="progress-circle" 
-                    style={{ 
-                      background: `conic-gradient(#00d4ff ${getProgress(trackedShow)}%, #3a3a6b ${getProgress(trackedShow)}%)` 
+                  <div
+                    className="progress-circle"
+                    style={{
+                      background: `conic-gradient(#00d4ff ${getProgress(trackedShow)}%, #3a3a6b ${getProgress(trackedShow)}%)`
                     }}
                   >
                     <div className="progress-text">
-                      {trackedShow.watchedEpisodes.length}
+                      {episodesCount[trackedShow.show.id] == null ? '...' : `${getProgress(trackedShow)}%`}
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <div className="my-show-info">
                 <h3 className="my-show-title">{trackedShow.show.name}</h3>
                 <p className="my-show-status">{trackedShow.show.status}</p>
